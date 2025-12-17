@@ -8,6 +8,7 @@ FS = OF*FC
 
 # Generate random bits
 bits = np.random.randint(0, 2, N)
+data = np.repeat(bits, OF)
 
 odd = bits[0::2]
 even = bits[1::2]
@@ -42,7 +43,7 @@ plt.grid()
 # data
 plt.subplot(4,1,2)
 plt.title("data")
-plt.plot(bits)
+plt.plot(data)
 plt.xlabel("Bit Index")
 plt.ylabel("Bit Value")
 plt.grid()
