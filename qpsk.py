@@ -28,7 +28,7 @@ carrier_sin = np.sin(2 * np.pi * FC * t)
 #modulated signals
 bpsk1 = odd_upsampled * carrier_cos
 bpsk2 = even_upsampled * carrier_sin
-qpsk_signal = bpsk1 - bpsk2
+qpsk_signal = bpsk1 + bpsk2
 # Plotting
 
 plt.figure(figsize = (12,8))
