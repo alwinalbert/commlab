@@ -3,40 +3,33 @@ import matplotlib.pyplot as plt
 from scipy.signal import convolve
 
 num_bits = 10
-sps = 8                       # Samples per symbol
-alpha = 0.4                   # Roll-off factor
-span = 6                      # Filter span in symbols
+sps = 8
+alpha = 0.4
+span = 6
 noise_variance = 0.1
 
 # 1. BIT GENERATION
-bits = np.random.randint(0, 2, num_bits)
+bits = np.random.randint(0,2,num_bits)
 
-# NRZ encoding
-symbols = 2 * bits - 1
+# NRZ mapping
+symbols = 2*bits - 1
 
-# 2. UPSAMPLING (USING np.repeat)
+# 2. UPSAMPLING
 upsampled = np.repeat(symbols, sps)
 
-# 3. RAISED COSINE FILTER
-def raised_cosine_filter(alpha, span, sps):
-    t = np.arange(-span/2, span/2 + 1/sps, 1/sps)
-    h = np.zeros_like(t)
+# 3. RAISED COSINE PULSE
+t = np.arange(-span/2, span/2 + 1/sps, 1/sps)
 
-    for i, ti in enumerate(t):
-        if ti == 0:
-            h[i] = 1.0
-        elif alpha != 0 and abs(ti) == 1 / (2 * alpha):
-            h[i] = (np.pi / 4) * np.sinc(1 / (2 * alpha))
-        else:
-            h[i] = (np.sinc(ti) *
-                    np.cos(np.pi * alpha * ti) /
-                    (1 - (2 * alpha * ti) ** 2))
+pulse = np.sinc(t) * np.cos(np.pi*alpha*t) / (1 - (2*alpha*t)**2)
 
-    return h / np.sqrt(np.sum(h**2))
+# Handle divide-by-zero cases
+pulse[np.isinf(pulse)] = 0
+pulse[np.isnan(pulse)] = np.pi/4 * np.sinc(1/(2*alpha))
 
-pulse = raised_cosine_filter(alpha, span, sps)
+# Normalize filter energy
+pulse = pulse / np.sqrt(np.sum(pulse**2))
 
-# 4. TRANSMITTER (PULSE SHAPING)
+# 4. TRANSMITTER (Pulse shaping)
 tx_signal = convolve(upsampled, pulse, mode='same')
 
 # 5. CHANNEL (AWGN)
@@ -47,71 +40,42 @@ rx_signal = tx_signal + noise
 matched_filter_output = convolve(rx_signal, pulse, mode='same')
 
 # 7. SAMPLING
-# With mode='same', the signal is already centered, so we sample at symbol positions
 sample_points = np.arange(sps//2, num_bits*sps, sps)
 samples = matched_filter_output[sample_points]
 
-# 8. DECISION DEVICE
+# 8. DECISION
 detected_bits = (samples > 0).astype(int)
 
 # 9. PLOTS
-fig = plt.figure(figsize=(14, 10))
+plt.figure()
+plt.title("Raised Cosine Pulse")
+plt.plot(t,pulse)
+plt.grid(True)
 
-# Subplot 1: Raised Cosine Filter Impulse Response
-plt.subplot(3, 2, 1)
-plt.plot(pulse, 'b-', linewidth=2)
-plt.title("Raised Cosine Filter Impulse Response", fontsize=11, fontweight='bold')
-plt.xlabel("Sample")
-plt.ylabel("Amplitude")
-plt.grid(True, alpha=0.3)
-
-# Subplot 2: Transmitted Signal
-plt.subplot(3, 2, 2)
+plt.figure()
+plt.subplot(2,1,1)
+plt.title("Transmitted Signal")
 plt.plot(tx_signal)
-plt.title("Transmitted Signal (Pulse Shaped)")
-plt.xlabel("Sample")
-plt.ylabel("Amplitude")
-plt.grid(True, alpha=0.3)
+plt.grid(True)
 
-# Subplot 3: Received Signal
-plt.subplot(3, 2, 3)
+plt.subplot(2,1,2)
+plt.title("Received Signal")
 plt.plot(rx_signal)
-plt.title("Received Signal (with AWGN)")
-plt.xlabel("Sample")
-plt.ylabel("Amplitude")
-plt.grid(True, alpha=0.3)
+plt.grid(True)
 
-# Subplot 4: Matched Filter Output
-plt.subplot(3, 2, 4)
-plt.plot(matched_filter_output, 'm-', linewidth=1.5, label='Matched Filter Output')
-plt.plot(sample_points, samples, 'ro', markersize=8, label='Sample Points')
+plt.figure()
 plt.title("Matched Filter Output")
-plt.xlabel("Sample")
-plt.ylabel("Amplitude")
-plt.legend()
-plt.grid(True, alpha=0.3)
+plt.plot(matched_filter_output)
+plt.grid(True)
 
-# Subplot 5: Original Bits
-plt.subplot(3, 2, 5)
+plt.figure()
+plt.subplot(2,1,1)
 plt.stem(bits)
-plt.title("Original Bits")
-plt.xlabel("Bit Index")
-plt.ylabel("Bit Value")
-plt.ylim([-0.5, 1.5])
-plt.grid(True, alpha=0.3)
+plt.title("Transmitted Bits")
 
-# Subplot 6: Detected Bits
-plt.subplot(3, 2, 6)
+plt.subplot(2,1,2)
 plt.stem(detected_bits)
 plt.title("Detected Bits")
-plt.xlabel("Bit Index")
-plt.ylabel("Bit Value")
-plt.ylim([-0.5, 1.5])
-plt.grid(True, alpha=0.3)
 
-plt.suptitle("Matched Filter Communication System")
 plt.tight_layout()
 plt.show()
-
-print("Original bits :", bits)
-print("Detected bits :", detected_bits)
