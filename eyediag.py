@@ -8,7 +8,7 @@ rolloff = 0.7
 g = lambda t: np.sinc(t) * np.cos(np.pi * rolloff * t) / (1 - (2 * rolloff * t) ** 2)
 
 # Binary message
-binary_sequence = [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0]
+binary_sequence = np.array([int(b) for b in input("Enter a binary sequence (e.g., 1101001): ")])
 
 # Bipolar conversion
 j = np.array(binary_sequence) * 2 - 1

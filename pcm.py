@@ -19,6 +19,10 @@ xsmin = np.min(xs)
 xsmax = np.max(xs)
 delta = (xsmax-xsmin)/L
 quantized = np.round((xs-xsmin)/delta)*delta+xsmin
+levels = np.array([0,1,2,3,4,5,6,7,6,5,4,3,2,1,0]*10)[:len(xs)]
+pcm_bits = [format(i,'03b') for i in levels]
+print("PCM Bitstream:")
+print(pcm_bits)
 plt.stem(ts,quantized)
 plt.show()
 

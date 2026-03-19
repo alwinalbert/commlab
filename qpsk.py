@@ -1,65 +1,74 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = int(input("enter number of bits : "))
-OF = int(input("enter oversampling factor: "))
-FC = int(input("enter carrier frequency (Hz): "))
-FS = OF*FC
+fc = float(input("Enter carrier frequency (Hz): "))
+fs = float(input("Enter sampling frequency (Hz): "))
+rb = float(input("Enter bit rate (bits per second): "))
 
-# Generate random bits
-bits = np.random.randint(0, 2, N)
-data = np.repeat(bits, OF)
+tb = 1/rb
 
-odd = bits[0::2]
-even = bits[1::2]
+# generate bits
+bits = np.random.randint(0,2,20)
 
-# Nrz encoding
-odd_nrz = 2*odd - 1
-even_nrz = 2*even - 1
+# split bits for I and Q
+I_bits = bits[0::2]
+Q_bits = bits[1::2]
 
-#upsampling
-odd_upsampled = np.repeat(odd_nrz, OF)
-even_upsampled = np.repeat(even_nrz, OF)
+# NRZ mapping
+I_symbols = 2*I_bits - 1
+Q_symbols = 2*Q_bits - 1
 
-#time axis
-t = np.arange(len(odd_upsampled)) / FS
-#carrier signals
-carrier_cos = np.cos(2 * np.pi * FC * t)
-carrier_sin = np.sin(2 * np.pi * FC * t)
-#modulated signals
-bpsk1 = odd_upsampled * carrier_cos
-bpsk2 = even_upsampled * carrier_sin
-qpsk_signal = bpsk1 + bpsk2
-# Plotting
+# time axis
+t = np.arange(0, tb*len(I_symbols), 1/fs)
 
-plt.figure(figsize = (12,8))
-#qpsk signal
+samples_per_symbol = int(fs*tb)
+
+# upsample
+I_wave = np.repeat(I_symbols, samples_per_symbol)
+Q_wave = np.repeat(Q_symbols, samples_per_symbol)
+
+# carriers
+carrier_cos = np.cos(2*np.pi*fc*t)
+carrier_sin = np.sin(2*np.pi*fc*t)
+
+# modulation
+qpsk = I_wave*carrier_cos + Q_wave*carrier_sin
+
+# plotting
+plt.figure(figsize=(12,8))
+
 plt.subplot(4,1,1)
-plt.title("qpsk time domain signal")
-plt.plot(t, qpsk_signal)
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
-plt.grid()
-# data
+plt.title("Input bits")
+plt.plot(np.repeat(bits, samples_per_symbol), drawstyle='steps-post')
+plt.grid(True)
+
 plt.subplot(4,1,2)
-plt.title("data")
-plt.plot(data)
-plt.xlabel("Bit Index")
-plt.ylabel("Bit Value")
-plt.grid()
-#upsampled data
+plt.title("I symbol wave")
+plt.plot(t, I_wave)
+plt.grid(True)
+
 plt.subplot(4,1,3)
-plt.title("odd bits after NRZ encoding and upsampling")
-plt.plot(odd_upsampled)
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
-plt.grid()
-#constellation diagram
+plt.title("Q symbol wave")
+plt.plot(t, Q_wave)
+plt.grid(True)
+
 plt.subplot(4,1,4)
-plt.title("constellation diagram")
-plt.scatter(odd_nrz, even_nrz)
-plt.xlabel("In-Phase")
-plt.ylabel("Quadrature")
-plt.grid()
+plt.title("QPSK Modulated Signal")
+plt.plot(t, qpsk)
+plt.grid(True)
+
 plt.tight_layout()
+plt.show()
+
+# constellation
+plt.figure()
+#plt.scatter(I_symbols, Q_symbols)
+plt.scatter(I_symbols,np.zeros(len(I_symbols)))
+plt.scatter(np.zeros(len(Q_symbols)),Q_symbols)
+plt.axhline(0)
+plt.axvline(0)
+plt.title("QPSK Constellation")
+plt.xlabel("In-phase (I)")
+plt.ylabel("Quadrature (Q)")
+plt.grid(True)
 plt.show()

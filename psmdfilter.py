@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import convolve
 
 num_bits = 10
 sps = 8
@@ -10,7 +9,7 @@ noise_variance = 0.1
 
 # 1. BIT GENERATION
 bits = np.random.randint(0,2,num_bits)
-
+  
 # NRZ mapping
 symbols = 2*bits - 1
 
@@ -30,14 +29,14 @@ pulse[np.isnan(pulse)] = np.pi/4 * np.sinc(1/(2*alpha))
 pulse = pulse / np.sqrt(np.sum(pulse**2))
 
 # 4. TRANSMITTER (Pulse shaping)
-tx_signal = convolve(upsampled, pulse, mode='same')
+tx_signal = np.convolve(upsampled, pulse, mode='same')
 
 # 5. CHANNEL (AWGN)
 noise = np.sqrt(noise_variance) * np.random.randn(len(tx_signal))
 rx_signal = tx_signal + noise
 
 # 6. MATCHED FILTER
-matched_filter_output = convolve(rx_signal, pulse, mode='same')
+matched_filter_output = np.convolve(rx_signal, pulse, mode='same')
 
 # 7. SAMPLING
 sample_points = np.arange(sps//2, num_bits*sps, sps)
