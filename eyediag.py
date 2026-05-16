@@ -19,9 +19,6 @@ t = np.arange(-2 * T, (len(j) + 2) * T, 1 / Fs)
 # Pulse-shaped signal
 y = sum(j[k] * g(t - k * T) for k in range(len(j)))
 
-# -----------------------------
-# Subplots
-# -----------------------------
 plt.figure(figsize=(12, 8))
 
 # 1️⃣ Binary Message
